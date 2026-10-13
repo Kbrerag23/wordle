@@ -1,121 +1,118 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { useEffect, useState } from 'react'
+import Casilla from './components/Casilla.jsx'
+
+const FILAS = 6
+const COLUMNAS = 5
+const PALABRAS = [
+  'ACTOR', 'AGUAS', 'ALTAR', 'AMIGO', 'ANDAR', 'ANGEL', 'ARBOL', 'ARENA', 'ASILO', 'AVION',
+  'BAHIA', 'BANCO', 'BARCO', 'BESOS', 'BRAZO', 'BUENO', 'CABLE', 'CAIDA', 'CAJON', 'CALOR',
+  'CAMPO', 'CANTO', 'CARNE', 'CARRO', 'CASAS', 'CEBRA', 'CERCA', 'CIEGO', 'CIELO', 'CINTA',
+  'CLARO', 'CLIMA', 'COBRE', 'COCHE', 'COLOR', 'COMER', 'CORAL', 'CORTE', 'CORTO', 'COSTA',
+  'CRUCE', 'CUEVA', 'CULPA', 'DANZA', 'DATOS', 'DEDOS', 'DIETA', 'DISCO', 'DOBLE', 'DOLOR',
+  'DONDE', 'DULCE', 'EXITO', 'EXTRA', 'FALSO', 'FAROL', 'FAVOR', 'FELIZ', 'FERIA', 'FIBRA',
+  'FINCA', 'FLOTA', 'FOCOS', 'FONDO', 'FORMA', 'FUEGO', 'FUERA', 'GAFAS', 'GALLO', 'GANAR',
+  'GENTE', 'GLOBO', 'GOLFO', 'GORDO', 'GRASA', 'GRUPO', 'GUAPO', 'HABER', 'HACER', 'HASTA',
+  'HEROE', 'HIELO', 'HOJAS', 'HONDO', 'HORAS', 'HOTEL', 'HUECO', 'HUESO', 'HUEVO', 'HUMOR',
+  'IDEAS', 'IGUAL', 'INDIO', 'ISLAS', 'JABON', 'JAPON', 'JARRA', 'JUEGO', 'JULIO', 'JUNIO',
+  'JUNTO', 'JUSTO', 'LABIO', 'LAPIZ', 'LARGO', 'LATIN', 'LECHE', 'LENTO', 'LEYES', 'LIBRO',
+  'LIDER', 'LIMON', 'LINDO', 'LINEA', 'LISTO', 'LLAVE', 'LLENO', 'LLORO', 'LUCHA', 'LUGAR',
+  'LUNES', 'MADRE', 'MAGIA', 'MANGO', 'MANOS', 'MAPAS', 'MARCO', 'MARES', 'MARZO', 'MAYOR',
+  'MEJOR', 'MENOR', 'MENOS', 'MENTE', 'MESES', 'METRO', 'MIEDO', 'MINAS', 'MITAD', 'MONTE',
+  'MORAL', 'MOTOR', 'MUJER', 'MUNDO', 'MUSEO', 'NACER', 'NADAR', 'NARIZ', 'NEGRO', 'NIEVE',
+  'NIÑOS', 'NOCHE', 'NORTE', 'NUBES', 'NUEVE', 'NUEVO', 'NUNCA', 'OASIS', 'OBRAS', 'OESTE',
+  'OJALA', 'ORDEN', 'OTOÑO', 'OVEJA', 'PADRE', 'PAGAR', 'PAPEL', 'PARED', 'PARTE', 'PASAR',
+  'PASOS', 'PASTO', 'PATIO', 'PECHO', 'PEDIR', 'PELEA', 'PELOS', 'PERRO', 'PIANO', 'PIEZA',
+  'PILAS', 'PINOS', 'PINTA', 'PISTA', 'PLATA', 'PLATO', 'PLAZA', 'PLOMO', 'POBRE', 'PODER',
+  'POETA', 'POLVO', 'PONER', 'PRADO', 'PRIMO', 'PRISA', 'PUNTO', 'QUESO', 'RATON', 'RAZON',
+  'RECTA', 'REGLA', 'REINA', 'RELOJ', 'RESTO', 'RITMO', 'RIVAL', 'ROBOT', 'ROJOS', 'RUBIO',
+  'RUEDA', 'RUIDO', 'RUTAS', 'SABER', 'SABOR', 'SACAR', 'SALTO', 'SALUD', 'SANTO', 'SEÑAL',
+  'SERIO', 'SILLA', 'SITIO', 'SOBRE', 'SOCIO', 'SUCIO', 'SUELO', 'SUIZA', 'SUTIL', 'TABLA',
+  'TACON', 'TARDE', 'TAZON', 'TECHO', 'TELAR', 'TEMAS', 'TENER', 'TENIS', 'TEXTO', 'TIGRE',
+  'TIPOS', 'TOCAR', 'TOMAR', 'TONTO', 'TORRE', 'TRAER', 'TRATO', 'TRIGO', 'TRUCO', 'TUMBA',
+  'TUNEL', 'VACAS', 'VALOR', 'VAPOR', 'VASOS', 'VECES', 'VELOZ', 'VENIR', 'VERDE', 'VIAJE',
+  'VIEJO', 'VILLA', 'VIRUS', 'VOCES', 'VOLAR', 'VUELO', 'YEGUA', 'ZORRO'
+]
+
+function palabraAlAzar() {
+  return PALABRAS[Math.floor(Math.random() * PALABRAS.length)]
+}
+
+function tableroVacio() {
+  const tablero = []
+  for (let f = 0; f < FILAS; f++) {
+    tablero.push(Array(COLUMNAS).fill(''))
+  }
+  return tablero
+}
+
+function estadoDe(letra, columna, solucion) {
+  if (solucion[columna] === letra) return 'correcta'
+  if (solucion.includes(letra)) return 'presente'
+  return 'ausente'
+}
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [intentos, setIntentos] = useState(tableroVacio())
+  const [filaActual, setFilaActual] = useState(0)
+  const [solucion] = useState(palabraAlAzar)
+  
+  const ultimo = filaActual > 0 ? intentos[filaActual - 1].join('') : ''
+  const ganada = ultimo === solucion
+  const terminada = ganada || filaActual === FILAS
+
+  useEffect(() => {
+    document.querySelector('.casilla:enabled')?.focus()
+  }, [filaActual])
+
+  function cambiarLetra(f, c, evento) {
+    const letra = evento.target.value.toUpperCase()
+    if (!/^[A-ZÑ]?$/.test(letra)) return
+    
+    const copia = intentos.map((fila) => [...fila])
+    copia[f][c] = letra
+    setIntentos(copia)
+    
+    if (letra !== '') evento.target.nextElementSibling?.focus()
+  }
+
+  function comprobar(evento) {
+    evento.preventDefault()
+    if (terminada) return
+    if (intentos[filaActual].includes('')) return
+    
+    setFilaActual(filaActual + 1)
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
+    <form className="juego" onSubmit={comprobar}>
+      <h1>Wordle</h1>
+      <div className="tablero">
+        {intentos.map((fila, f) => (
+          <div className="fila" key={f}>
+            {fila.map((letra, c) => (
+              <Casilla
+                key={c}
+                letra={letra}
+                estado={f < filaActual ? estadoDe(letra, c, solucion) : ''}
+                activa={f === filaActual && !terminada}
+                onCambio={(evento) => cambiarLetra(f, c, evento)}
+              />
+            ))}
+          </div>
+        ))}
+      </div>
+      {terminada ? (
+        <p className="mensaje" role="status">
+          {ganada
+            ? '¡Enhorabuena, has acertado!'
+            : `La palabra era ${solucion}`}
+        </p>
+      ) : (
+        <button className="boton" type="submit">
+          Comprobar
         </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+      )}
+    </form>
   )
 }
 
