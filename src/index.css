@@ -31,32 +31,11 @@ body {
   text-align: center;
   text-transform: uppercase;
 }
-.casilla.correcta {
-  background: #2e7d32;
-  border-color: #2e7d32;
-  color: #ffffff;
-}
-.casilla.presente {
-  background: #f2c94c;
-  border-color: #f2c94c;
-  color: #1a1a1b;
-}
-.casilla.ausente {
-  background: #5f6368;
-  border-color: #5f6368;
-  color: #ffffff;
-}
-.tablero {
-  display: grid;
-  gap: 6px;
-  margin: 24px 0;
-}
 .casilla:disabled {
   opacity: 1;
   -webkit-text-fill-color: currentColor;
 }
-.casilla:focus-visible,
-.boton:focus-visible {
+.casilla:focus-visible, .boton:focus-visible {
   outline: 3px solid #1a73e8;
   outline-offset: 2px;
 }
@@ -73,4 +52,47 @@ body {
 .mensaje {
   font-size: 1.2rem;
   font-weight: bold;
+}
+.tablero {
+  display: grid;
+  gap: 6px;
+  margin: 24px 0;
+}
+
+@keyframes pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.casilla.llena {
+  animation: pop 0.15s ease-in-out;
+  border-color: #5f6368;
+}
+
+@keyframes flip {
+  0% { transform: rotateX(0deg); opacity: 0; }
+  100% { transform: rotateX(360deg); opacity: 1; }
+}
+
+.casilla.correcta,
+.casilla.presente,
+.casilla.ausente {
+  animation: flip 0.6s ease-in-out backwards; 
+}
+
+.casilla.correcta {
+  background: #2e7d32;
+  border-color: #2e7d32;
+  color: #ffffff;
+}
+.casilla.presente {
+  background: #f2c94c;
+  border-color: #f2c94c;
+  color: #1a1a1b;
+}
+.casilla.ausente {
+  background: #5f6368;
+  border-color: #5f6368;
+  color: #ffffff;
 }

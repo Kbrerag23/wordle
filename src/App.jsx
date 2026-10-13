@@ -92,10 +92,16 @@ function App() {
             {fila.map((letra, c) => (
               <Casilla
                 key={c}
+                columna={c}
                 letra={letra}
                 estado={f < filaActual ? estadoDe(letra, c, solucion) : ''}
                 activa={f === filaActual && !terminada}
                 onCambio={(evento) => cambiarLetra(f, c, evento)}
+                onKeyDown={(evento) => {
+                  if (evento.key === 'Backspace' && letra === '') {
+                    evento.target.previousElementSibling?.focus()
+                  }
+                }}
               />
             ))}
           </div>
