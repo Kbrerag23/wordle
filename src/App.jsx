@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import Casilla from './components/Casilla.jsx'
+import Teclado from './components/Teclado.jsx'
 
 const FILAS = 6
 const COLUMNAS = 5
@@ -45,24 +46,60 @@ function tableroVacio() {
   return tablero
 }
 
-function estadoDe(letra, columna, solucion) {
-  if (solucion[columna] === letra) return 'correcta'
-  if (solucion.includes(letra)) return 'presente'
-  return 'ausente'
+function calcularEstadosFila(intento, solucion) {
+  const estados = Array(COLUMNAS).fill('ausente')
+  const solucionArr = solucion.split('')
+  
+  for (let i = 0; i < COLUMNAS; i++) {
+    if (intento[i] === solucionArr[i]) {
+      estados[i] = 'correcta'
+      solucionArr[i] = null
+    }
+  }
+  
+  for (let i = 0; i < COLUMNAS; i++) {
+    if (intento[i] !== '' && estados[i] !== 'correcta') {
+      const idx = solucionArr.indexOf(intento[i])
+      if (idx !== -1) {
+        estados[i] = 'presente'
+        solucionArr[idx] = null
+      }
+    }
+  }
+  
+  return estados
 }
 
 function App() {
   const [intentos, setIntentos] = useState(tableroVacio())
   const [filaActual, setFilaActual] = useState(0)
-  const [solucion] = useState(palabraAlAzar)
+  const [solucion, setSolucion] = useState(palabraAlAzar)
+  const [error, setError] = useState('')
   
   const ultimo = filaActual > 0 ? intentos[filaActual - 1].join('') : ''
   const ganada = ultimo === solucion
   const terminada = ganada || filaActual === FILAS
 
+  const letrasUsadas = {}
+  for (let f = 0; f < filaActual; f++) {
+    const estados = calcularEstadosFila(intentos[f], solucion)
+    intentos[f].forEach((letra, c) => {
+      if (estados[c] === 'correcta') letrasUsadas[letra] = 'correcta'
+      else if (estados[c] === 'presente' && letrasUsadas[letra] !== 'correcta') letrasUsadas[letra] = 'presente'
+      else if (estados[c] === 'ausente' && !letrasUsadas[letra]) letrasUsadas[letra] = 'ausente'
+    })
+  }
+
   useEffect(() => {
     document.querySelector('.casilla:enabled')?.focus()
   }, [filaActual])
+
+  function reiniciarPartida() {
+    setIntentos(tableroVacio())
+    setFilaActual(0)
+    setSolucion(palabraAlAzar())
+    setError('')
+  }
 
   function cambiarLetra(f, c, evento) {
     const letra = evento.target.value.toUpperCase()
@@ -71,53 +108,107 @@ function App() {
     const copia = intentos.map((fila) => [...fila])
     copia[f][c] = letra
     setIntentos(copia)
+    setError('')
     
     if (letra !== '') evento.target.nextElementSibling?.focus()
+  }
+
+  function pulsarTeclado(tecla) {
+    if (terminada) return
+    const fila = intentos[filaActual]
+    
+    if (tecla === 'ENTER') {
+      if (fila.includes('')) {
+        setError('Faltan letras')
+      } else {
+        setFilaActual(filaActual + 1)
+        setError('')
+      }
+      return
+    }
+    
+    if (tecla === 'BACKSPACE') {
+      for (let c = COLUMNAS - 1; c >= 0; c--) {
+        if (fila[c] !== '') {
+          const copia = intentos.map((r) => [...r])
+          copia[filaActual][c] = ''
+          setIntentos(copia)
+          document.querySelectorAll('.fila')[filaActual].querySelectorAll('.casilla')[c].focus()
+          break
+        }
+      }
+      return
+    }
+    
+    const emptyIndex = fila.findIndex((l) => l === '')
+    if (emptyIndex !== -1) {
+      const copia = intentos.map((r) => [...r])
+      copia[filaActual][emptyIndex] = tecla
+      setIntentos(copia)
+      setError('')
+      
+      const nextIndex = emptyIndex < COLUMNAS - 1 ? emptyIndex + 1 : emptyIndex
+      document.querySelectorAll('.fila')[filaActual].querySelectorAll('.casilla')[nextIndex].focus()
+    }
   }
 
   function comprobar(evento) {
     evento.preventDefault()
     if (terminada) return
-    if (intentos[filaActual].includes('')) return
-    
+    if (intentos[filaActual].includes('')) {
+      setError('Faltan letras')
+      return
+    }
     setFilaActual(filaActual + 1)
+    setError('')
   }
 
   return (
     <form className="juego" onSubmit={comprobar}>
       <h1>Wordle</h1>
+      <div className="error">{error}</div>
       <div className="tablero">
-        {intentos.map((fila, f) => (
-          <div className="fila" key={f}>
-            {fila.map((letra, c) => (
-              <Casilla
-                key={c}
-                columna={c}
-                letra={letra}
-                estado={f < filaActual ? estadoDe(letra, c, solucion) : ''}
-                activa={f === filaActual && !terminada}
-                onCambio={(evento) => cambiarLetra(f, c, evento)}
-                onKeyDown={(evento) => {
-                  if (evento.key === 'Backspace' && letra === '') {
-                    evento.target.previousElementSibling?.focus()
-                  }
-                }}
-              />
-            ))}
-          </div>
-        ))}
+        {intentos.map((fila, f) => {
+          const estados = f < filaActual ? calcularEstadosFila(fila, solucion) : Array(COLUMNAS).fill('')
+          return (
+            <div className="fila" key={f}>
+              {fila.map((letra, c) => (
+                <Casilla
+                  key={c}
+                  fila={f}
+                  columna={c}
+                  letra={letra}
+                  estado={estados[c]}
+                  activa={f === filaActual && !terminada}
+                  onCambio={(evento) => cambiarLetra(f, c, evento)}
+                  onKeyDown={(evento) => {
+                    if (evento.key === 'Backspace' && letra === '') {
+                      evento.target.previousElementSibling?.focus()
+                    }
+                  }}
+                />
+              ))}
+            </div>
+          )
+        })}
       </div>
+      
       {terminada ? (
-        <p className="mensaje" role="status">
-          {ganada
-            ? '¡Enhorabuena, has acertado!'
-            : `La palabra era ${solucion}`}
-        </p>
+        <div>
+          <p className="mensaje" role="status">
+            {ganada ? '¡Enhorabuena, has acertado!' : `La palabra era ${solucion}`}
+          </p>
+          <button className="boton" type="button" onClick={reiniciarPartida}>
+            Nueva partida
+          </button>
+        </div>
       ) : (
-        <button className="boton" type="submit">
+        <button className="boton" type="submit" style={{ display: 'none' }}>
           Comprobar
         </button>
       )}
+
+      <Teclado letrasUsadas={letrasUsadas} onPulsarTecla={pulsarTeclado} />
     </form>
   )
 }
